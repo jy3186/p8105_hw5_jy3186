@@ -42,32 +42,3 @@ homicide_table =
 knitr::kable(homicide_table)
 ```
 
-use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object,
-apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe
-```{r}
-prop.test(
-  x = homicide_unsolved %>% 
-    filter(city_state == "Baltimore, MD") %>% 
-    pull(unsolved_total),
-  n =homicide_count %>% 
-    filter(city_state == "Baltimore, MD") %>% 
-    pull(homicide_total)
-  )%>% 
-    broom::tidy()
-
-```
-Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Using mapping.
-```{r}
-homicide_map = 
-  homicide_table %>% 
-  mutate(
-    prop = map2(.x = unsolved_total,
-                .y = homicide_total,
-                ~prop.test(x=.x, n =.y)),
-    clean = map(.x = prop, ~broom::tidy(.x)) 
-  ) %>% 
-  unnest(clean) %>% 
-  select(city_state, estimate, conf.low, conf.high)
-```
-
-
