@@ -57,5 +57,15 @@ prop.test(
 
 ```
 
-
+Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Using mapping.
+```{r}
+homicide_map = 
+  homicide_table %>% 
+  mutate(
+    prop = map2(.x = unsolved_total, .y = homicide_total, ~prop.test(x=.x, n =.y)),
+    clean = map(.x = prop, ~broom::tidy(.x)) 
+  ) %>% 
+  unnest(clean) %>% 
+  select(city_state, estimate, conf.low, conf.high)
+```
 
