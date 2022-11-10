@@ -1,0 +1,73 @@
+---
+title: "p8105_hw5_jy3186"
+author: "Jiayi Yang"
+date: "2022-11-10"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(tidyverse)
+```
+
+## Problem 1
+Import and tidy the dataset
+```{r, message = FALSE}
+homicide_df = 
+  read_csv(url("https://github.com/washingtonpost/data-homicides/blob/master/homicide-data.csv?raw=true"))
+```
+
+Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+
+```{r}
+homicide_new =
+homicide_df %>% 
+  mutate(city_state = str_c(city, state, sep = ", ")) %>% 
+  group_by(city_state)
+
+homicide_count = 
+  homicide_new %>% 
+  group_by(city_state) %>% 
+  summarize(homicide_total = n())
+
+homicide_unsolved =
+  homicide_new %>% 
+  filter(disposition %in% c("Closed without arrest", "Open/No arrest")) %>% 
+  group_by(city_state) %>% 
+  summarize(unsolved_total = n())
+
+homicide_table = 
+  merge(homicide_count, homicide_unsolved, by = "city_state")
+
+knitr::kable(homicide_table)
+```
+
+use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object,
+apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe
+```{r}
+prop.test(
+  x = homicide_unsolved %>% 
+    filter(city_state == "Baltimore, MD") %>% 
+    pull(unsolved_total),
+  n =homicide_count %>% 
+    filter(city_state == "Baltimore, MD") %>% 
+    pull(homicide_total)
+  )%>% 
+    broom::tidy()
+
+```
+Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Using mapping.
+```{r}
+homicide_map = 
+  homicide_table %>% 
+  mutate(
+    prop = map2(.x = unsolved_total,
+                .y = homicide_total,
+                ~prop.test(x=.x, n =.y)),
+    clean = map(.x = prop, ~broom::tidy(.x)) 
+  ) %>% 
+  unnest(clean) %>% 
+  select(city_state, estimate, conf.low, conf.high)
+```
+
+
