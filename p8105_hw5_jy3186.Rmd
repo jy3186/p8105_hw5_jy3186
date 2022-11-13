@@ -131,7 +131,8 @@ tibble(
 
 Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
 ```{r}
-sim_results %>% 
+sim_plot_1 = 
+  sim_results %>% 
   filter(p.value < 0.05) %>% 
   group_by(mu) %>% 
   summarize(
@@ -140,7 +141,7 @@ sim_results %>%
   mutate(
     proportion = reject/5000
   ) %>% 
-  ggplot(aes(x = mu, y = proportion))+geom_line()+
+  ggplot(aes(x = mu, y = proportion)) + geom_line() +
   geom_point() + scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) +
     labs(
     title = "Association between power of test and true value of μ",
@@ -149,4 +150,41 @@ sim_results %>%
   )
 ```
 
-As the mean of sample gets larger, the power of the test gets larger
+`As the mean of sample gets larger, the power of the test gets larger`
+
+Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis.
+```{r}
+sim_plot_2 = 
+  sim_results %>% 
+  group_by(mu) %>% 
+  summarize(average_est = mean(estimate)) %>% 
+  ggplot(aes(x = mu, y = average_est), color = mu) + geom_line() +
+  geom_point() + scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) +
+  labs(
+    title = "Association between average estimate and true value of μ",
+    x = "mean",
+    y = "average estimate of μ"
+  )
+
+sim_plot_2
+```
+Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis.
+```{r}
+sim_plot_3 =
+  sim_results %>% 
+  filter(p.value < 0.05) %>% 
+  group_by(mu) %>% 
+  summarize(
+    average_est_rej = mean(estimate)
+  ) %>% 
+  ggplot(aes(x = mu, y = average_est_rej), color = mu) + geom_line() +
+  geom_point() + scale_x_continuous(limits = c(1,6), breaks = seq(1,6,1)) +
+  labs(
+    title = "Association between average estimate and true value of μ",
+    x = "mean",
+    y = "average estimate of μ rejected by null"
+  )
+
+sim_plot_3
+```
+
